@@ -48,7 +48,10 @@ export function rawData() {
 
 }
 
-export function rawDataFromUrl(url: URL){
+export function rawDataFromUrl(url: URL, referrer?: string){
+  // this bit strips the protocol away from referrer, since psl doesn't want that
+  // get only the top level domain of referrer
+  const referringDomain = getDomain_(referrer, exceptionSLDs);
   // get url parameters
   const urlParams = new URLSearchParams(url.search);
   // then turn them into an object with key: value pairs
@@ -58,20 +61,24 @@ export function rawDataFromUrl(url: URL){
   // checks for click identifiers in url parameters, and if present, results in cpc/cpm
   const paidUrlData = getPaidUrlData(urlParamsObject, paidUrlParamsConfig);
   // checks referring domain for common search engines, and when found, results in organic
-  const searchEngineData = getSearchEngineData(
-    "",
-    urlParamsObject,
-    searchEngineConfig,
-  );
-
-  return {
-    query_string: url.search,
-    utm_tags: utmTags,
-    url_params:
-      Object.keys(urlParamsObject).length > 0 ? urlParamsObject : null,
-    paid_url_data: paidUrlData,
-    organic_search_data: searchEngineData,
+  const searchEngineData = getSearchEngineData(referringDomain, urlParamsObject, searchEngineConfig);
+  // set referring domain if present
+  const referralData = referringDomain == null ? null : { medium: "referral", source: referringDomain } as visitDataInterface;
+  
+  const newData = {
+    'this_hostname': url.origin || "localhost",
+    'this_domain': getDomain_(url.origin) || "localhost",
+    'referring_hostname': referrer || null,
+    'referring_domain': referringDomain,
+    'query_string': url.search,
+    'utm_tags': utmTags,
+    "url_params": Object.keys(urlParamsObject).length > 0 ? urlParamsObject : null,
+    "paid_url_data": paidUrlData,
+    "organic_search_data": searchEngineData,
+    "referral_data": referralData
   };
+
+  return newData
 }
 
 interface urlParamsObjectInterface {
@@ -207,8 +214,8 @@ export function get(): visitDataInterface {
   return parseTrafficData(trafficData);
 }
 
-export function getFromUrl(url: URL): visitDataInterface {
-  const trafficData = rawDataFromUrl(url);
+export function getFromUrl(url: URL, referrer?: string): visitDataInterface {
+  const trafficData = rawDataFromUrl(url, referrer);
   return parseTrafficData(trafficData);
 }
 
