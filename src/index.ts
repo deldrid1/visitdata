@@ -48,6 +48,32 @@ export function rawData() {
 
 }
 
+export function rawDataFromUrl(url: URL){
+  // get url parameters
+  const urlParams = new URLSearchParams(url.search);
+  // then turn them into an object with key: value pairs
+  const urlParamsObject = Object.fromEntries(urlParams);
+  // gets only utm tags from url parameters
+  const utmTags = getUtmTags(urlParamsObject);
+  // checks for click identifiers in url parameters, and if present, results in cpc/cpm
+  const paidUrlData = getPaidUrlData(urlParamsObject, paidUrlParamsConfig);
+  // checks referring domain for common search engines, and when found, results in organic
+  const searchEngineData = getSearchEngineData(
+    "",
+    urlParamsObject,
+    searchEngineConfig,
+  );
+
+  return {
+    query_string: url.search,
+    utm_tags: utmTags,
+    url_params:
+      Object.keys(urlParamsObject).length > 0 ? urlParamsObject : null,
+    paid_url_data: paidUrlData,
+    organic_search_data: searchEngineData,
+  };
+}
+
 interface urlParamsObjectInterface {
   [key: string]: string
 }
@@ -159,24 +185,31 @@ function getPaidUrlData(urlParamsObject: urlParamsObjectInterface, paidUrlParams
   return null;
 }
 
-export function get(): visitDataInterface {
-
-  const trafficData = rawData();
-
+function parseTrafficData(trafficData: any) {
   // Are UTM tags present?
-  return  trafficData.utm_tags as visitDataInterface ||
-    // or is the traffic paid?
-    trafficData.paid_url_data as visitDataInterface ||
-    // is it an organic search engine traffic?
-    trafficData.organic_search_data as visitDataInterface ||
-    // or is it a referral?
-    trafficData.referral_data as visitDataInterface ||
-    // if not, it's direct
-    {
-      'source': '(direct)',
-      'medium': '(none)',
-      'campaign': '(not set)'
-    } as visitDataInterface;
+  return trafficData.utm_tags as visitDataInterface ||
+  // or is the traffic paid?
+  trafficData.paid_url_data as visitDataInterface ||
+  // is it an organic search engine traffic?
+  trafficData.organic_search_data as visitDataInterface ||
+  // or is it a referral?
+  trafficData.referral_data as visitDataInterface ||
+  // if not, it's direct
+  {
+    'source': '(direct)',
+    'medium': '(none)',
+    'campaign': '(not set)'
+  } as visitDataInterface;
+}
+
+export function get(): visitDataInterface {
+  const trafficData = rawData();
+  return parseTrafficData(trafficData);
+}
+
+export function getFromUrl(url: URL): visitDataInterface {
+  const trafficData = rawDataFromUrl(url);
+  return parseTrafficData(trafficData);
 }
 
 /**
