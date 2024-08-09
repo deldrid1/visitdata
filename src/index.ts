@@ -235,7 +235,20 @@ function getDomain_(url: string, ex_SDLs: string[] = exceptionSLDs): string | nu
   if (url === null) return null;
   // if URL doesn't have http in the beginning, add https
   
-  const getProtocol = () => window.location.protocol || 'https:';
+  const getProtocol = () => {
+    // Check if the environment is Node.js or a browser
+    const isNode = typeof window === 'undefined';
+    try {
+      // In Node.js, return the protocol directly from the URL
+      return isNode ? new URL(url)?.protocol || 'https:'
+          // In browsers, return the protocol from the URL or fallback to window.location.protocol
+        : new URL(url)?.protocol || window.location.protocol || 'https:';
+        
+    } catch (e) {
+      // Handle errors: return a default protocol in case of invalid URL
+      return isNode ? 'https:' : window.location.protocol || 'https:'
+    }
+  };
 
   url = (url.substring(0,4) == 'http' ? url : getProtocol() + '//' + url);
   
