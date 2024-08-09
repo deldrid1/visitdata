@@ -1,4 +1,4 @@
-import { exportedForTesting } from "../src/index";
+import { exportedForTesting, getFromUrl } from "../src/index";
 
 const { getDomain_ } = exportedForTesting;
 
@@ -15,6 +15,22 @@ describe("Domain function", () => {
         expect(getDomain_("http://localhost")).toEqual("localhost");
         expect(getDomain_("bbc.co.uk")).toEqual("bbc.co.uk");
         expect(getDomain_('')).toEqual(null);
-        expect(getDomain_(null)).toEqual(null);
+        expect(getDomain_(null as any)).toEqual(null);
     });
 });
+
+describe("URL Method", () => {
+    it("should parse a URL", () => {
+        expect(getFromUrl(new URL("https://dailydrop.com/")).source).toEqual("(direct)");
+        expect(getFromUrl(new URL("https://dailydrop.com/")).medium).toEqual("(none)");
+        expect(getFromUrl(new URL("https://dailydrop.com/")).campaign).toEqual("(not set)");
+
+        expect(getFromUrl(new URL("https://dailydrop.com/credit-cards?")).source).toEqual("(direct)");
+        expect(getFromUrl(new URL("https://dailydrop.com/credit-cards?")).medium).toEqual("(none)");
+        expect(getFromUrl(new URL("https://dailydrop.com/credit-cards?")).campaign).toEqual("(not set)");
+
+        expect(getFromUrl(new URL("https://dailydrop.com/credit-cards?utm_source=kara-and-nate&utm_medium=youtube&utm_campaign=test")).source).toEqual("kara-and-nate");
+        expect(getFromUrl(new URL("https://dailydrop.com/credit-cards?utm_source=kara-and-nate&utm_medium=youtube&utm_campaign=test")).medium).toEqual("youtube");
+        expect(getFromUrl(new URL("https://dailydrop.com/credit-cards?utm_source=kara-and-nate&utm_medium=youtube&utm_campaign=test")).campaign).toEqual("test");
+    })
+})

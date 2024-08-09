@@ -48,7 +48,7 @@ export function rawData() {
 
 }
 
-export function rawDataFromUrl(url: URL, referrer?: string){
+export function rawDataFromUrl(url: URL, referrer: string = ''){
   // this bit strips the protocol away from referrer, since psl doesn't want that
   // get only the top level domain of referrer
   const referringDomain = getDomain_(referrer, exceptionSLDs);
