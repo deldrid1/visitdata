@@ -2,12 +2,12 @@
     "compilerOptions": {
       "outDir": "./dist/",
       "noImplicitAny": true,
-      "module": "esnext",
-      "target": "es5",
+      "module": "NodeNext",
+      "target": "ESNext",
       "declaration": true,
       "declarationDir": "./types",
       "allowJs": true,
-      "moduleResolution": "node",
+      "moduleResolution": "NodeNext",
       "resolveJsonModule": true,
       "esModuleInterop": true
     },

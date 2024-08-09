@@ -6,6 +6,7 @@ import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import terser from '@rollup/plugin-terser';
 import typescript from '@rollup/plugin-typescript'
+import copy from 'rollup-plugin-copy';
 
 const config = [
   {
@@ -33,7 +34,15 @@ const config = [
       commonjs(), // so Rollup can convert `ms` to an ES module
       typescript(),
       json(),
-      terser() // minify, but only in production
+      terser(), // minify, but only in production
+      // This shouldn't be needed (the json plugin above should be grabbing this), but its not so we hand specify
+      copy({
+        targets: [
+          { src: 'src/click_identifiers.json', dest: 'dist' },
+          { src: 'src/exception_slds.json', dest: 'dist' },
+          { src: 'src/search_engines.json', dest: 'dist' },
+        ]
+      }),
     ]
   },
   {
@@ -41,7 +50,6 @@ const config = [
     output: [{ file: "./dist/visitdata.esm.d.ts", format: "es" }],
     plugins: [dts()],
   }
-]
-  ;
+];
 
 export default config;
